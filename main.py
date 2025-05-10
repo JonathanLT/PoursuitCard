@@ -126,8 +126,13 @@ with open(csv_file, mode='r', encoding='utf-8') as file:
         questions.append(row[1])
         responses.append(row[2])
     # Create a dictionary to store the questions and responses for each theme
-    print(themes, questions, responses)
-
+    theme_dict = {}
+    for i in range(len(themes)):
+        if themes[i] not in theme_dict:
+            theme_dict[themes[i]] = {"questions": [], "responses": []}
+        theme_dict[themes[i]]["questions"].append(questions[i])
+        theme_dict[themes[i]]["responses"].append(responses[i])
+    print(theme_dict)
 
 card = Card(questions, responses)
 print(card)
