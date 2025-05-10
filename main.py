@@ -113,6 +113,11 @@ class Card:
 csv_file = "QR.csv"
 with open(csv_file, mode='r', encoding='utf-8') as file:
     reader = csv.reader(file, delimiter=';')
+
+    # Skip the header row
+    next(reader)
+
+    # Read the CSV file and store the themes, questions, and responses in lists
     themes = []
     questions = []
     responses = []
