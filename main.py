@@ -1,17 +1,24 @@
 import csv
 from PIL import Image, ImageDraw, ImageFont
+import hashlib
 import uuid
+import os
 
 class Card:
-    def __init__(self, questions, responses):
-        self.id = uuid.uuid4()
+    def __init__(self, questions: list, responses: list):
         self.questions = questions
         self.responses = responses
+        self.id = self.__hash_card__()
+        self.image = None
 
     def __repr__(self):
-        return f"Card(id={self.id}, questions={self.questions}, responses={self.responses})"
+        return f"Card(id={self.id})"
 
-    def draw_card(self):
+    def __hash_card__(self):
+        hs = hashlib.sha256(",".join(self.questions+self.responses).encode()).hexdigest()
+        return hs
+
+    def create_card(self):
         # Function to create a gradient image
         def gradient(size, start, stop):
             im = Image.new("RGB", size)
@@ -103,37 +110,60 @@ class Card:
             draw_r.multiline_text((40, 40 + (i * 33)), text, font=font, fill="black", spacing=1, align="left")
 
         # Merge the two images horizontally
-        im = get_concat_h(image_q, image_r)
-        # Save the image
-        im.save("card.png")
-        # Show the image
-        im.show()
+        self.image = get_concat_h(image_q, image_r)
 
+    def save_card(self, path=None):
+        # If no path is provided, save in the current directory
+        if path is None:
+            path = "."
+        # Save the card image
+        self.image.save(os.path.join(path, f"card_{self.id}.png"))
+
+    def display_card(self):
+        # Display the card image
+        self.image.show()
 
 csv_file = "QR.csv"
+nb_questions = 0
+theme_dict = {}
+
+# Read the CSV file
 with open(csv_file, mode='r', encoding='utf-8') as file:
     reader = csv.reader(file, delimiter=';')
 
     # Skip the header row
     next(reader)
-
-    # Read the CSV file and store the themes, questions, and responses in lists
     themes = []
     questions = []
     responses = []
+
+    # Read the CSV file and store the themes, questions, and responses in lists
     for row in reader:
         themes.append(row[0])
         questions.append(row[1])
         responses.append(row[2])
     # Create a dictionary to store the questions and responses for each theme
-    theme_dict = {}
+    nb_questions = len(questions)
     for i in range(len(themes)):
         if themes[i] not in theme_dict:
             theme_dict[themes[i]] = {"questions": [], "responses": []}
         theme_dict[themes[i]]["questions"].append(questions[i])
         theme_dict[themes[i]]["responses"].append(responses[i])
-    print(theme_dict)
 
-card = Card(questions, responses)
-print(card)
-card.draw_card()
+while nb_questions > 0:
+    # Create a card for each theme
+    card_questions = []
+    card_responses = []
+    for theme in theme_dict.keys():
+        # Pop a question and response from the theme
+        questions = theme_dict[theme]["questions"]
+        responses = theme_dict[theme]["responses"]
+        if questions and responses:
+            card_questions.append(questions.pop())
+            card_responses.append(responses.pop())
+            nb_questions -= 1
+    # Create a card object
+    card = Card(card_questions, card_responses)
+    card.create_card()
+    card.save_card("./output")
+    print(f"Card created: {card}")
