@@ -174,5 +174,5 @@ cython_debug/
 .pypirc
 
 # My own stuff
-./output/
-./QR.csv
+/output
+QR.csv
