@@ -1,8 +1,7 @@
-import csv
-from PIL import Image, ImageDraw, ImageFont
-import hashlib
-import uuid
 import os
+import csv
+import hashlib
+from PIL import Image, ImageDraw, ImageFont
 
 class Card:
     def __init__(self, questions: list, responses: list):
@@ -15,7 +14,7 @@ class Card:
         return f"Card(id={self.id})"
 
     def __hash_card__(self):
-        hs = hashlib.sha256(",".join(self.questions+self.responses).encode()).hexdigest()
+        hs = hashlib.sha1(",".join(self.questions+self.responses).encode()).hexdigest()
         return hs
 
     def create_card(self):
@@ -71,6 +70,13 @@ class Card:
         font = ImageFont.truetype("Arial Unicode.ttf", font_size)
         draw_r.text((width/2 - 60, 5), text, fill="black", font=font)
 
+        # Add the ID to the questions card
+        text = self.id
+        font_size = 9
+        font = ImageFont.truetype("Arial Unicode.ttf", font_size)
+        draw_q.text((width-200, height-11), text, fill=(211,211,211), font=font)
+        draw_r.text((width-200, height-11), text, fill=(211,211,211), font=font)
+
         for i, color in enumerate(COLORS.values()):
             # Add triangles to the question line
             draw_q.polygon([(20, 45 + (i * 33)), (30, 50 + (i * 33)), (30, 40 + (i * 33))], fill=color)
@@ -123,47 +129,49 @@ class Card:
         # Display the card image
         self.image.show()
 
-csv_file = "QR.csv"
-nb_questions = 0
-theme_dict = {}
 
-# Read the CSV file
-with open(csv_file, mode='r', encoding='utf-8') as file:
-    reader = csv.reader(file, delimiter=';')
+if __name__ == "__main__":
+    csv_file = "QR.csv"
+    nb_questions = 0
+    theme_dict = {}
 
-    # Skip the header row
-    next(reader)
-    themes = []
-    questions = []
-    responses = []
+    # Read the CSV file
+    with open(csv_file, mode='r', encoding='utf-8') as file:
+        reader = csv.reader(file, delimiter=';')
 
-    # Read the CSV file and store the themes, questions, and responses in lists
-    for row in reader:
-        themes.append(row[0])
-        questions.append(row[1])
-        responses.append(row[2])
-    # Create a dictionary to store the questions and responses for each theme
-    nb_questions = len(questions)
-    for i in range(len(themes)):
-        if themes[i] not in theme_dict:
-            theme_dict[themes[i]] = {"questions": [], "responses": []}
-        theme_dict[themes[i]]["questions"].append(questions[i])
-        theme_dict[themes[i]]["responses"].append(responses[i])
+        # Skip the header row
+        next(reader)
+        themes = []
+        questions = []
+        responses = []
 
-while nb_questions > 0:
-    # Create a card for each theme
-    card_questions = []
-    card_responses = []
-    for theme in theme_dict.keys():
-        # Pop a question and response from the theme
-        questions = theme_dict[theme]["questions"]
-        responses = theme_dict[theme]["responses"]
-        if questions and responses:
-            card_questions.append(questions.pop())
-            card_responses.append(responses.pop())
-            nb_questions -= 1
-    # Create a card object
-    card = Card(card_questions, card_responses)
-    card.create_card()
-    card.save_card("./output")
-    print(f"Card created: {card}")
+        # Read the CSV file and store the themes, questions, and responses in lists
+        for row in reader:
+            themes.append(row[0])
+            questions.append(row[1])
+            responses.append(row[2])
+        # Create a dictionary to store the questions and responses for each theme
+        nb_questions = len(questions)
+        for i in range(len(themes)):
+            if themes[i] not in theme_dict:
+                theme_dict[themes[i]] = {"questions": [], "responses": []}
+            theme_dict[themes[i]]["questions"].append(questions[i])
+            theme_dict[themes[i]]["responses"].append(responses[i])
+
+    while nb_questions > 0:
+        # Create a card for each theme
+        card_questions = []
+        card_responses = []
+        for theme in theme_dict.keys():
+            # Pop a question and response from the theme
+            questions = theme_dict[theme]["questions"]
+            responses = theme_dict[theme]["responses"]
+            if questions and responses:
+                card_questions.append(questions.pop())
+                card_responses.append(responses.pop())
+                nb_questions -= 1
+        # Create a card object
+        card = Card(card_questions, card_responses)
+        card.create_card()
+        card.save_card("./output")
+        print(f"Card created: {card}")
