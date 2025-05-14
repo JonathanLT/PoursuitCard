@@ -4,14 +4,15 @@ import hashlib
 from PIL import Image, ImageDraw, ImageFont
 
 class Card:
-    def __init__(self, questions: list, responses: list):
+    def __init__(self, id: int, questions: list, responses: list):
         self.questions = questions
         self.responses = responses
-        self.id = self.__hash_card__()
+        self.hash = self.__hash_card__()
+        self.id = id
         self.image = None
 
     def __repr__(self):
-        return f"Card(id={self.id})"
+        return f"Card(id={self.id}, hash={self.hash})"
 
     def __hash_card__(self):
         hs = hashlib.sha1(",".join(self.questions+self.responses).encode()).hexdigest()
@@ -46,8 +47,8 @@ class Card:
         draw_q = ImageDraw.Draw(image_q)
         draw_r = ImageDraw.Draw(image_r)
         # Add rounded rectangles
-        draw_q.rounded_rectangle([10, 10, width - 10, height - 10], 10, fill=None, outline="black", width=3)
-        draw_r.rounded_rectangle([10, 10, width - 10, height - 10], 10, fill=None, outline="black", width=3)
+        draw_q.rounded_rectangle([5, 5, width - 5, height - 5], 10, fill=None, outline="black", width=1)
+        draw_r.rounded_rectangle([5, 5, width - 5, height - 5], 10, fill=None, outline="black", width=1)
 
         # Define colors for the cards
         COLORS = {
@@ -71,11 +72,11 @@ class Card:
         draw_r.text((width/2 - 60, 5), text, fill="black", font=font)
 
         # Add the ID to the questions card
-        text = self.id
-        font_size = 9
+        text = f"ID: {self.id}"
+        font_size = 10
         font = ImageFont.truetype("Arial Unicode.ttf", font_size)
-        draw_q.text((width-200, height-11), text, fill=(211,211,211), font=font)
-        draw_r.text((width-200, height-11), text, fill=(211,211,211), font=font)
+        draw_q.text((width-50, height-20), text, fill="gray", font=font)
+        draw_r.text((width-50, height-20), text, fill="gray", font=font)
 
         for i, color in enumerate(COLORS.values()):
             # Add triangles to the question line
@@ -158,7 +159,9 @@ if __name__ == "__main__":
             theme_dict[themes[i]]["questions"].append(questions[i])
             theme_dict[themes[i]]["responses"].append(responses[i])
 
+    card_id = 0
     while nb_questions > 0:
+        card_id += 1
         # Create a card for each theme
         card_questions = []
         card_responses = []
@@ -171,7 +174,7 @@ if __name__ == "__main__":
                 card_responses.append(responses.pop())
                 nb_questions -= 1
         # Create a card object
-        card = Card(card_questions, card_responses)
+        card = Card(card_id, card_questions, card_responses)
         card.create_card()
         card.save_card("./output")
         print(f"Card created: {card}")
